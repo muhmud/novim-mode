@@ -41,19 +41,6 @@ function! s:BufferLines()
 endfunction
 
 function! s:InsertAndSelectionBehaviour()
-  " Intelligently set/unset insertmode
-  augroup start_insertmode
-    autocmd!
-    if has('timers') == 1
-      " The timer here delays the call to check whether the current buffer
-      " is an editable one. Without the delay, the check is often too early
-      " to correctly get the value of `&buftype`, etc.
-      autocmd BufEnter * call timer_start(1, {->execute('call s:InsertMode()')})
-    else
-      autocmd BufEnter * call s:InsertMode()
-    endif
-  augroup END
-
   " Mostly changes the way selection works.
   " See: http://vimdoc.sourceforge.net/htmldoc/gui.html#:behave
   " An extract from the docs about the difference between `behave mswin`
@@ -79,15 +66,13 @@ function! g:SetNoVimModeShortcuts()
   " Basic interactions with the editor
   if g:novim_mode_use_general_app_shortcuts == 1
     " CTRL+q to completely exit vim
-    inoremap <silent> <C-Q> <C-O>:call novim_mode#ExitVim()<CR>
-    snoremap <silent> <C-Q> <C-O>:call novim_mode#ExitVim()<CR>
-    nnoremap <silent> <C-Q> :call novim_mode#ExitVim()<CR>
+    inoremap <silent> <Esc>[6_ <C-O>:call novim_mode#ExitVim()<CR>
+    snoremap <silent> <Esc>[6_ <C-O>:call novim_mode#ExitVim()<CR>
+    nnoremap <silent> <Esc>[6_ :call novim_mode#ExitVim()<CR>
 
     " CTRL+n for new file
     inoremap <C-N> <C-O>:edit<Space>
-    " CTRL+o to open file
-    " TODO: hook into netrw or NERDTree
-    inoremap <C-O> <C-O>:edit<Space>
+
     " CTRL+s saves
     inoremap <silent> <C-S> <C-O>:update<CR>
 
@@ -97,14 +82,6 @@ function! g:SetNoVimModeShortcuts()
     " ALT+; for command prompt
     inoremap <M-;> <C-O>:
     snoremap <M-;> <C-O>:
-    inoremap <M-c> <C-O>:
-    snoremap <M-c> <C-O>:
-    nnoremap <M-;> :
-    nnoremap <M-c> :
-
-    " <ALT+o> replaces native <C-O> for one-time normal mode commands.
-    inoremap <M-o> <C-O>
-    snoremap <M-o> <C-O>
   endif
 
   " General fixes to editor behaviour
@@ -191,9 +168,9 @@ function! g:SetNoVimModeShortcuts()
     " Find next
     inoremap <F3> <C-O>n
     " Find previous
-    inoremap <S-F3> <C-O>N
+    inoremap <Esc>[1;2R <C-O>N
     " Find and replace
-    inoremap <C-H> <C-O>:%s/[FIND]/[REPLACE]/g
+    inoremap <C-H> <C-O>:%s/
   endif
 
   " Undo/redo
@@ -306,10 +283,7 @@ endfunction
 
 " TODO: Mention any unsaved buffers
 function! novim_mode#ExitVim()
-  let l:confirmed = confirm('Do you really want to quit Vim?', "&Yes\n&No", 2)
-  if l:confirmed == 1
-    quitall!
-  endif
+  quitall!
 endfunction
 
 function! novim_mode#GotoLine()
@@ -347,3 +321,4 @@ function! g:novim_mode#StartNoVimMode()
     call g:SetNoVimModeShortcuts()
   endif
 endfunction
+
